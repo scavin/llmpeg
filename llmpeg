@@ -37,5 +37,5 @@ echo "Generated command: $command"
 # Prompt the user to run the command
 read -p "Press Enter to run the command, or Ctrl+C to cancel..."
 
-# Run the command
-eval "$command"
+# Run the command with additional options
+eval "$(echo "$command" | sed 's/ffmpeg/ffmpeg -v quiet -stats/')"
