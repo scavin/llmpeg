@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# Check if user input is provided
+if [ -z "$*" ]; then
+    echo "Requires a prompt of what you want to do, i.e."
+    echo "\"llmpeg remove audio from example.mov\""
+    exit 1
+fi
+
+# Capture command-line arguments
+user_input="$*"
+
+# Store the curl response as a variable
+response=$(curl -s "https://api.openai.com/v1/chat/completions" \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer $OPENAI_API_KEY" \
+    -d "{
+        \"model\": \"gpt-4o-mini\",
+        \"messages\": [
+            {
+                \"role\": \"system\",
+                \"content\": \"You write ffmpeg commands based on the description from the user. You should only respond with a command line command for ffmpeg, never any additional text. All responses should be a single line without any line breaks.\"
+            },
+            {
+                \"role\": \"user\",
+                \"content\": \"$user_input\"
+            }
+        ]
+    }")
+
+# Parse the "content" field from the response using grep and sed
+command=$(echo "$response" | grep -o '"content": *"[^"]*"' | sed 's/"content": *"//;s/"$//')
+
+# Echo the command
+echo "Generated command: $command"
+
+# Prompt the user to run the command
+read -p "Press Enter to run the command, or Ctrl+C to cancel..."
+
+# Run the command
+eval "$command"
