@@ -28,8 +28,15 @@ response=$(curl -s "https://api.openai.com/v1/chat/completions" \
         ]
     }")
 
-# Parse the "content" field from the response using grep and sed
-command=$(echo "$response" | grep -o '"content": *"[^"]*"' | sed 's/"content": *"//;s/"$//')
+
+# Parse the "content" field from the response using grep and sed, ignoring escaped quotes
+content=$(echo "$response" | grep -o '"content": *"[^"\\]*\(\\.[^"\\]*\)*"')
+
+# Remove the content prefix
+command=$(echo "$content" | sed 's/"content": *"//;s/"$//')
+
+# Remove backslashes from escaped quotes
+command=$(echo "$command" | sed 's/\\"/"/g')
 
 # Echo the command
 echo "Generated command: $command"
