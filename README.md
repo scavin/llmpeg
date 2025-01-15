@@ -6,7 +6,9 @@ Allows for simple usage of ffmpeg via an llm.
 
 `llmpeg remove audio from exampleVid.mov`
 
-![llmpegDemo](https://github.com/user-attachments/assets/6d160554-2f36-4558-b42f-35bced6e4b88)
+### Demo
+![llmpeg](https://github.com/user-attachments/assets/a26eb71f-7246-447e-a64d-587530c0b461)
+
 
 ## Requirements
 * ffmpeg
