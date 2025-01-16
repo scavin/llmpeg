@@ -12,4 +12,5 @@ Allows for simple usage of ffmpeg via an llm.
 
 ## Requirements
 * ffmpeg
+* jq
 * [an OpenAI API key environment variable set](https://platform.openai.com/docs/quickstart?context=curl&language-preference=curl#create-and-export-an-api-key)

@@ -40,7 +40,7 @@ elif [ -n "$GROQ_API_KEY" ]; then
             \"messages\": [
                 {
                     \"role\": \"system\",
-                    \"content\": \"You write ffmpeg commands based on the description from the user. You should only respond with a command line command for ffmpeg, never any additional text. All responses should be a single line without any line breaks.\n\nFor example, if the user asks \\\"convert a video input.mp4 from MP4 to WebM?\\\", you should respond with: \\\"ffmpeg -i input.mp4 -c:v libvpx -c:a libvorbis output.webm\\\"\"
+                    \"content\": \"You write ffmpeg commands based on the description from the user. You should only respond with a command line command for ffmpeg, never any additional text. Keep the output folder same as the input folder in the generated command. Propose the output file name based on input file name and the modification applied on it. All responses should be a single line without any line breaks.\n\nFor example, if the user asks \\\"convert a video folderX/input.mp4 from MP4 to WebM?\\\", you should respond with: \\\"ffmpeg -i folderX/input.mp4 -c:v libvpx -c:a libvorbis folderX/output_in_webm.webm\\\"\"
                 },
                 {
                     \"role\": \"user\",
@@ -50,13 +50,14 @@ elif [ -n "$GROQ_API_KEY" ]; then
             \"temperature\": 1,
             \"max_tokens\": 1024,
             \"top_p\": 1,
-            \"stream\": true,
+            \"stream\": false,
             \"stop\": null
         }")
 else
     echo "No API key found. Please set OPENAI_API_KEY or GROQ_API_KEY."
     exit 1
 fi
+
 
 # Parse the "content" field from the response using jq
 content=$(echo "$response" | jq -r '.choices[0].message.content // empty')
