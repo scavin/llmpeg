@@ -10,64 +10,68 @@ fi
 # Capture command-line arguments
 user_input="$*"
 
-# # Store the curl response as a variable
-# response=$(curl -s "https://api.openai.com/v1/chat/completions" \
-#     -H "Content-Type: application/json" \
-#     -H "Authorization: Bearer $OPENAI_API_KEY" \
-#     -d "{
-#         \"model\": \"gpt-4o-mini\",
-#         \"messages\": [
-#             {
-#                 \"role\": \"system\",
-#                 \"content\": \"You write ffmpeg commands based on the description from the user. You should only respond with a command line command for ffmpeg, never any additional text. All responses should be a single line without any line breaks.\"
-#             },
-#             {
-#                 \"role\": \"user\",
-#                 \"content\": \"$user_input\"
-#             }
-#         ]
-#     }")
+# Conditional check for API keys
+if [ -n "$OPENAI_API_KEY" ]; then
+    # Store the curl response as a variable for OpenAI API
+    response=$(curl -s "https://api.openai.com/v1/chat/completions" \
+        -H "Content-Type: application/json" \
+        -H "Authorization: Bearer $OPENAI_API_KEY" \
+        -d "{
+            \"model\": \"gpt-4o-mini\",
+            \"messages\": [
+                {
+                    \"role\": \"system\",
+                    \"content\": \"You write ffmpeg commands based on the description from the user. You should only respond with a command line command for ffmpeg, never any additional text. All responses should be a single line without any line breaks.\"
+                },
+                {
+                    \"role\": \"user\",
+                    \"content\": \"$user_input\"
+                }
+            ]
+        }")
+elif [ -n "$GROQ_API_KEY" ]; then
+    # Store the curl response as a variable for GROQ API
+    response=$(curl -s "https://api.groq.com/openai/v1/chat/completions" \
+        -X POST \
+        -H "Content-Type: application/json" \
+        -H "Authorization: Bearer ${GROQ_API_KEY}" \
+        -d "{
+            \"model\": \"llama-3.3-70b-versatile\",
+            \"messages\": [
+                {
+                    \"role\": \"system\",
+                    \"content\": \"You write ffmpeg commands based on the description from the user. You should only respond with a command line command for ffmpeg, never any additional text. All responses should be a single line without any line breaks.\n\nFor example, if the user asks \\\"convert a video input.mp4 from MP4 to WebM?\\\", you should respond with: \\\"ffmpeg -i input.mp4 -c:v libvpx -c:a libvorbis output.webm\\\"\"
+                },
+                {
+                    \"role\": \"user\",
+                    \"content\": \"$user_input\"
+                }
+            ],
+            \"temperature\": 1,
+            \"max_tokens\": 1024,
+            \"top_p\": 1,
+            \"stream\": true,
+            \"stop\": null
+        }")
+else
+    echo "No API key found. Please set OPENAI_API_KEY or GROQ_API_KEY."
+    exit 1
+fi
 
-# Store the curl response as a variable using llama via groq
-response=$(curl -s "https://api.groq.com/openai/v1/chat/completions" \
-  -X POST \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer ${GROQ_API_KEY}" \
-  -d "{
-         \"messages\": [
-           {
-             \"role\": \"system\",
-             \"content\": \"You write ffmpeg commands based on the description from the user. You should only respond with a command line command for ffmpeg, never any additional text. All responses should be a single line without any line breaks.\n\nFor example, if the user asks \"convert a video input.mp4 from MP4 to WebM?\", you should respond with: \"ffmpeg -i input.mp4 -c:v libvpx -c:a libvorbis output.webm\"\"
-           },
-           {
-             \"role\": \"user\",
-             \"content\": \"$user_input\"
-           }
-         ],
-         \"model\": \"llama-3.3-70b-versatile\",
-         \"temperature\": 1,
-         \"max_tokens\": 1024,
-         \"top_p\": 1,
-         \"stream\": true,
-         \"stop\": null
-       }"
-)
+# Parse the "content" field from the response using jq
+content=$(echo "$response" | jq -r '.choices[0].message.content // empty')
 
-
-# Parse the "content" field from the response using grep and sed, ignoring escaped quotes
-content=$(echo "$response" | grep -o '"content": *"[^"\\]*\(\\.[^"\\]*\)*"')
-
-# Remove the content prefix
-command=$(echo "$content" | sed 's/"content": *"//;s/"$//')
-
-# Remove backslashes from escaped quotes
-command=$(echo "$command" | sed 's/\\"/"/g')
+# Check if content is empty or null
+if [ -z "$content" ]; then
+    echo "Error: No command generated or API response is empty."
+    exit 1
+fi
 
 # Echo the command
-echo "Generated command: $command"
+echo "Generated command: $content"
 
 # Prompt the user to run the command
 read -p "Press Enter to run the command, or Ctrl+C to cancel..."
 
 # Run the command with additional options
-eval "$(echo "$command" | sed 's/ffmpeg/ffmpeg -v quiet -stats/')"
+eval "$(echo "$content" | sed 's/ffmpeg/ffmpeg -v quiet -stats/')"
