@@ -58,9 +58,14 @@ else
     exit 1
 fi
 
+# Parse the "content" field from the response using grep and sed, ignoring escaped quotes
+content=$(echo "$response" | grep -o '"content": *"[^"\\]*\(\\.[^"\\]*\)*"')
 
-# Parse the "content" field from the response using jq
-content=$(echo "$response" | jq -r '.choices[0].message.content // empty')
+# Remove the content prefix
+command=$(echo "$content" | sed 's/"content": *"//;s/"$//')
+
+# Remove backslashes from escaped quotes
+command=$(echo "$command" | sed 's/\\"/"/g')
 
 # Check if content is empty or null
 if [ -z "$content" ]; then
@@ -69,10 +74,10 @@ if [ -z "$content" ]; then
 fi
 
 # Echo the command
-echo "Generated command: $content"
+echo "Generated command: $command"
 
 # Prompt the user to run the command
 read -p "Press Enter to run the command, or Ctrl+C to cancel..."
 
 # Run the command with additional options
-eval "$(echo "$content" | sed 's/ffmpeg/ffmpeg -v quiet -stats/')"
+eval "$(echo "$command" | sed 's/ffmpeg/ffmpeg -v quiet -stats/')"
