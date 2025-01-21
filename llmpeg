@@ -2,8 +2,8 @@
 
 # Check if user input is provided
 if [ -z "$*" ]; then
-    echo "Requires a prompt of what you want to do, i.e."
-    echo "\"llmpeg remove audio from example.mov\""
+    echo "直接输入你想要做什么，比如："
+    echo "\"llmpeg 从 example.mov 中删除声音\""
     exit 1
 fi
 
@@ -54,7 +54,8 @@ elif [ -n "$GROQ_API_KEY" ]; then
             \"stop\": null
         }")
 else
-    echo "No API key found. Please set OPENAI_API_KEY or GROQ_API_KEY."
+    echo "没有发现 API key. 请设置 OPENAI_API_KEY 或 GROQ_API_KEY."
+    echo "export OPENAI_API_KEY=\"sk-xxxx\""
     exit 1
 fi
 
@@ -69,15 +70,15 @@ command=$(echo "$command" | sed 's/\\"/"/g')
 
 # Check if content is empty or null
 if [ -z "$content" ]; then
-    echo "Error: No command generated or API response is empty."
+    echo "错误：未生成命令或 API 响应为空。"
     exit 1
 fi
 
 # Echo the command
-echo "Generated command: $command"
+echo "生成命令: $command"
 
 # Prompt the user to run the command
-read -p "Press Enter to run the command, or Ctrl+C to cancel..."
+read -p "按回车执行命令，或 Ctrl+C 取消..."
 
 # Run the command with additional options
 eval "$(echo "$command" | sed 's/ffmpeg/ffmpeg -v quiet -stats/')"
