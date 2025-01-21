@@ -13,6 +13,7 @@ user_input="$*"
 # Conditional check for API keys
 if [ -n "$OPENAI_API_KEY" ]; then
     # Store the curl response as a variable for OpenAI API
+    # 在这里修改 OpenAI 的 Base URL
     response=$(curl -s "https://api.openai.com/v1/chat/completions" \
         -H "Content-Type: application/json" \
         -H "Authorization: Bearer $OPENAI_API_KEY" \
